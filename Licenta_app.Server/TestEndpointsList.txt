@@ -20,7 +20,7 @@ Samples:
 "password": "string"
 }
 
-2. Register X
+2. Register x
    • Method: POST
    • Route: /api/auth/register
    • Description: Registers a new user and returns a JWT token.
