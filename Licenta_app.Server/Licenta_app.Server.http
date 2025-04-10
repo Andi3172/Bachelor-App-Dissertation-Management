@@ -1,0 +1,6 @@
+@Licenta_app.Server_HostAddress = http://localhost:5294
+
+GET {{Licenta_app.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

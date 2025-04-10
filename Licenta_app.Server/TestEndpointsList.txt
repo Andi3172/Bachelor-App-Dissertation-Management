@@ -1,0 +1,323 @@
+AuthController X
+1. Login 
+   • Method: POST
+   • Route: /api/auth/login
+   • Description: Authenticates a user and returns a JWT token.
+	
+Samples:
+{
+  "email": "prof1@ase.ro",
+  "password": "string"
+}
+
+{
+  "email": "stud1@stud.ase.ro",
+  "password": "string"
+}
+
+{
+"email": "admin1@admin.ase.ro",
+"password": "string"
+}
+
+2. Register X
+   • Method: POST
+   • Route: /api/auth/register
+   • Description: Registers a new user and returns a JWT token.
+
+UserController
+1. Get All Users
+   • Method: GET
+   • Route: /api/users
+   • Description: Retrieves all users.
+2. Get User by ID
+   • Method: GET
+   • Route: /api/users/{id}
+   • Description: Retrieves a user by their ID.
+3. Update User
+   • Method: PUT
+   • Route: /api/users/{id}
+   • Description: Updates an existing user.
+4. Delete User
+   • Method: DELETE
+   • Route: /api/users/{id}
+   • Description: Deletes a user by their ID.
+
+StudentController
+1. Get All Students
+   • Method: GET
+   • Route: /api/students
+   • Description: Retrieves all students.
+2. Get Student by ID
+   • Method: GET
+   • Route: /api/students/{id}
+   • Description: Retrieves a student by their ID.
+3. Get Students by Department
+   • Method: GET
+   • Route: /api/students/by-department/{departmentName}
+   • Description: Retrieves students by department name.
+4. Get Student by Student Number
+   • Method: GET
+   • Route: /api/students/by-student-number/{studentNumber}
+   • Description: Retrieves a student by their student number.
+5. Create Student
+   • Method: POST
+   • Route: /api/students
+   • Description: Creates a new student.
+6. Update Student
+   • Method: PUT
+   • Route: /api/students/{id}
+   • Description: Updates an existing student.
+7. Admin Update Student
+   • Method: PUT
+   • Route: /api/students/admin-update/{id}
+   • Description: Admin-specific endpoint for updating a student.
+8. Delete Student
+   • Method: DELETE
+   • Route: /api/students/{id}
+   • Description: Deletes a student by their ID.
+9. Delete Students by Department
+   • Method: DELETE
+   • Route: /api/students/by-department/{departmentName}
+   • Description: Deletes all students in a department.
+
+ProfessorController
+1. Get All Professors
+   • Method: GET
+   • Route: /api/professors
+   • Description: Retrieves all professors.
+2. Get Professor by ID
+   • Method: GET
+   • Route: /api/professors/{id}
+   • Description: Retrieves a professor by their ID.
+3. Get Professors by Department
+   • Method: GET
+   • Route: /api/professors/by-department/{departmentName}
+   • Description: Retrieves professors by department name.
+4. Create Professor
+   • Method: POST
+   • Route: /api/professors
+   • Description: Creates a new professor.
+5. Update Professor
+   • Method: PUT
+   • Route: /api/professors/{id}
+   • Description: Updates an existing professor.
+6. Admin Update Professor
+   • Method: PUT
+   • Route: /api/professors/admin-update/{id}
+   • Description: Admin-specific endpoint for updating a professor.
+7. Delete Professor
+   • Method: DELETE
+   • Route: /api/professors/{id}
+   • Description: Deletes a professor by their ID.
+8. Get Professor's Department
+   • Method: GET
+   • Route: /api/professors/{id}/department
+   • Description: Retrieves the department of a professor.
+9. Get Professor's Registration Sessions
+   • Method: GET
+   • Route: /api/professors/{id}/registration-sessions
+   • Description: Retrieves the registration sessions of a professor.
+AuthController  
+1. Login  
+  • Method: POST  
+  • Route: /api/auth/login  
+  • Description: Authenticates a user and returns a JWT token.  
+2. Register  
+  • Method: POST  
+  • Route: /api/auth/register  
+  • Description: Registers a new user and returns a JWT token.  
+
+UserController  
+1. Get All Users  
+  • Method: GET  
+  • Route: /api/users  
+  • Description: Retrieves all users.  
+2. Get User by ID  
+  • Method: GET  
+  • Route: /api/users/{id}  
+  • Description: Retrieves a user by their ID.  
+3. Update User  
+  • Method: PUT  
+  • Route: /api/users/{id}  
+  • Description: Updates an existing user.  
+4. Delete User  
+  • Method: DELETE  
+  • Route: /api/users/{id}  
+  • Description: Deletes a user by their ID.  
+
+StudentController  
+1. Get All Students  
+  • Method: GET  
+  • Route: /api/students  
+  • Description: Retrieves all students.  
+2. Get Student by ID  
+  • Method: GET  
+  • Route: /api/students/{id}  
+  • Description: Retrieves a student by their ID.  
+3. Get Students by Department  
+  • Method: GET  
+  • Route: /api/students/by-department/{departmentName}  
+  • Description: Retrieves students by department name.  
+4. Get Student by Student Number  
+  • Method: GET  
+  • Route: /api/students/by-student-number/{studentNumber}  
+  • Description: Retrieves a student by their student number.  
+5. Create Student  
+  • Method: POST  
+  • Route: /api/students  
+  • Description: Creates a new student.  
+6. Update Student  
+  • Method: PUT  
+  • Route: /api/students/{id}  
+  • Description: Updates an existing student.  
+7. Admin Update Student  
+  • Method: PUT  
+  • Route: /api/students/admin-update/{id}  
+  • Description: Admin-specific endpoint for updating a student.  
+8. Delete Student  
+  • Method: DELETE  
+  • Route: /api/students/{id}  
+  • Description: Deletes a student by their ID.  
+9. Delete Students by Department  
+  • Method: DELETE  
+  • Route: /api/students/by-department/{departmentName}  
+  • Description: Deletes all students in a department.  
+
+ProfessorController  
+1. Get All Professors  
+  • Method: GET  
+  • Route: /api/professors  
+  • Description: Retrieves all professors.  
+2. Get Professor by ID  
+  • Method: GET  
+  • Route: /api/professors/{id}  
+  • Description: Retrieves a professor by their ID.  
+3. Get Professors by Department  
+  • Method: GET  
+  • Route: /api/professors/by-department/{departmentName}  
+  • Description: Retrieves professors by department name.  
+4. Create Professor  
+  • Method: POST  
+  • Route: /api/professors  
+  • Description: Creates a new professor.  
+5. Update Professor  
+  • Method: PUT  
+  • Route: /api/professors/{id}  
+  • Description: Updates an existing professor.  
+6. Admin Update Professor  
+  • Method: PUT  
+  • Route: /api/professors/admin-update/{id}  
+  • Description: Admin-specific endpoint for updating a professor.  
+7. Delete Professor  
+  • Method: DELETE  
+  • Route: /api/professors/{id}  
+  • Description: Deletes a professor by their ID.  
+8. Get Professor's Department  
+  • Method: GET  
+  • Route: /api/professors/{id}/department  
+  • Description: Retrieves the department of a professor.  
+9. Get Professor's Registration Sessions  
+  • Method: GET  
+  • Route: /api/professors/{id}/registration-sessions  
+  • Description: Retrieves the registration sessions of a professor.  
+
+DepartmentController  
+1. Get All Departments  
+  • Method: GET  
+  • Route: /api/departments  
+  • Description: Retrieves all departments.  
+2. Get Department by ID  
+  • Method: GET  
+  • Route: /api/departments/{id}  
+  • Description: Retrieves a department by its ID.  
+3. Create Department  
+  • Method: POST  
+  • Route: /api/departments  
+  • Description: Creates a new department.  
+4. Update Department  
+  • Method: PUT  
+  • Route: /api/departments/{id}  
+  • Description: Updates an existing department.  
+5. Delete Department  
+  • Method: DELETE  
+  • Route: /api/departments/{id}  
+  • Description: Deletes a department by its ID.  
+
+FileUploadController  
+1. Get All Files  
+  • Method: GET  
+  • Route: /api/fileupload  
+  • Description: Retrieves all files.  
+2. Get File by ID  
+  • Method: GET  
+  • Route: /api/fileupload/{id}  
+  • Description: Retrieves a file by its ID.  
+3. Upload File  
+  • Method: POST  
+  • Route: /api/fileupload/upload  
+  • Description: Uploads a new file.  
+4. Download File  
+  • Method: GET  
+  • Route: /api/fileupload/download/{id}  
+  • Description: Downloads a file by its ID.  
+5. Delete File  
+  • Method: DELETE  
+  • Route: /api/fileupload/{id}  
+  • Description: Deletes a file by its ID.  
+
+RegistrationRequestController  
+1. Get All Registration Requests  
+  • Method: GET  
+  • Route: /api/registrationrequests  
+  • Description: Retrieves all registration requests.  
+2. Get Registration Request by ID  
+  • Method: GET  
+  • Route: /api/registrationrequests/{id}  
+  • Description: Retrieves a registration request by its ID.  
+3. Create Registration Request  
+  • Method: POST  
+  • Route: /api/registrationrequests  
+  • Description: Creates a new registration request.  
+4. Update Registration Request  
+  • Method: PUT  
+  • Route: /api/registrationrequests/{id}  
+  • Description: Updates an existing registration request.  
+5. Delete Registration Request  
+  • Method: DELETE  
+  • Route: /api/registrationrequests/{id}  
+  • Description: Deletes a registration request by its ID.  
+6. Get Registration Requests by Student  
+  • Method: GET  
+  • Route: /api/registrationrequests/by-student/{studentId}  
+  • Description: Retrieves registration requests by student ID.  
+7. Get Registration Requests by Session  
+  • Method: GET  
+  • Route: /api/registrationrequests/by-session/{sessionId}  
+  • Description: Retrieves registration requests by session ID.  
+
+RegistrationSessionController  
+1. Get All Registration Sessions  
+  • Method: GET  
+  • Route: /api/registrationsessions  
+  • Description: Retrieves all registration sessions.  
+2. Get Registration Session by ID  
+  • Method: GET  
+  • Route: /api/registrationsessions/{id}  
+  • Description: Retrieves a registration session by its ID.  
+3. Create Registration Session  
+  • Method: POST  
+  • Route: /api/registrationsessions  
+  • Description: Creates a new registration session.  
+4. Update Registration Session  
+  • Method: PUT  
+  • Route: /api/registrationsessions/{id}  
+  • Description: Updates an existing registration session.  
+5. Delete Registration Session  
+  • Method: DELETE  
+  • Route: /api/registrationsessions/{id}  
+  • Description: Deletes a registration session by its ID.  
+6. Get Active Registration Sessions  
+  • Method: GET  
+  • Route: /api/registrationsessions/active  
+  • Description: Retrieves all active registration sessions.
