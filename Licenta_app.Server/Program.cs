@@ -12,6 +12,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 var jwtSettings = builder.Configuration.GetSection("JWT");
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DefaultCorsPolicy", policy =>
+    {
+        policy
+            .WithOrigins("https://localhost:62675")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+
+    });
+});
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -148,6 +160,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+app.UseCors("DefaultCorsPolicy");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

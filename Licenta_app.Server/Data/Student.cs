@@ -8,7 +8,7 @@ namespace Licenta_app.Server.Data
         [Key]
         [ForeignKey("User")]
         public int UserId { get; set; }
-        public User User { get; set; }
+        public User? User { get; set; }
         public string? StudentNumber { get; set; }
         public string? Department { get; set; }
     }

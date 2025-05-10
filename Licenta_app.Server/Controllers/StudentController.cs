@@ -98,7 +98,7 @@ namespace Licenta_app.Server.Controllers
         // PUT: api/students/5
         [Authorize(Roles = "Student, Admin")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent([FromQuery] int id, Student student)
+        public async Task<IActionResult> UpdateStudent(int id, Student student)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
@@ -198,6 +198,12 @@ namespace Licenta_app.Server.Controllers
             }
 
             _context.Students.Remove(studToDelete);
+
+            var userToDelete = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (userToDelete != null)
+            {
+                _context.Users.Remove(userToDelete);
+            }
             try
             {
                 await _context.SaveChangesAsync();

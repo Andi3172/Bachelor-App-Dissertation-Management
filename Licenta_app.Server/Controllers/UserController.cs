@@ -48,10 +48,10 @@ namespace Licenta_app.Server.Controllers
         // update existing user
         // PUT: api/users
         //[HttpPut("{id}")]
-        [HttpPut]
+        [HttpPut("{id}")]
         //from query is used to get the id from the url. Can i get the id from the token?
         
-        public async Task<IActionResult> UpdateUser([FromQuery] int id, [FromBody] User user)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
@@ -72,8 +72,13 @@ namespace Licenta_app.Server.Controllers
 
             existingUser.Username = user.Username;
             existingUser.Email = user.Email;
-            //change password
-            existingUser.Password = user.Password;
+            //change password and hash it
+            if (user.Password != null)
+            {
+                existingUser.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            }
+
+
             existingUser.UpdatedAt = DateTime.UtcNow;
 
             _context.Entry(existingUser).State = EntityState.Modified;
@@ -111,7 +116,24 @@ namespace Licenta_app.Server.Controllers
             }
 
             _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == id);
+            if (student != null)
+            {
+                _context.Students.Remove(student);
+            }
+            var professor = await _context.Professors.FirstOrDefaultAsync(p => p.UserId == id);
+            if (professor != null)
+            {
+                _context.Professors.Remove(professor);
+            }
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while deleting the user.");
+            }
 
             return NoContent();
         }
