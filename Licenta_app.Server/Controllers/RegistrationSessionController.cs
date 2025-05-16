@@ -22,10 +22,12 @@ namespace Licenta_app.Server.Controllers
         // get all registration sessions
         // GET: api/registrationsessions
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RegistrationSession>>> GetRegistrationSessions()
+        public async Task<ActionResult<IEnumerable<RegistrationSession>>> GetRegistrationSessions(int page = 1, int pageSize = 10)
         {
             return await _context.RegistrationSessions
                 .Include(rs => rs.Professor)
+                .Skip((page -1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
         }
 
@@ -55,6 +57,32 @@ namespace Licenta_app.Server.Controllers
             {
                 return BadRequest("Invalid professor ID");
             }
+
+            if (session.MaxStudents <=0)
+            {
+                session.MaxStudents = 5; // default value
+            }
+
+            var isHeadOfDepartment = professor.Department?.HeadOfDepartmentId == professor.UserId;
+
+            if (!isHeadOfDepartment && session.MaxStudents != 5)
+            {
+                return BadRequest("Only the Head of Department or Admin can modify the maximum number of students.");
+            }
+
+            session.StartDate = session.StartDate.ToUniversalTime();
+            session.EndDate = session.EndDate.ToUniversalTime();
+
+            var overlappingSession = await _context.RegistrationSessions
+                .Where(rs => rs.ProfessorId == session.ProfessorId)
+                .Where(rs => rs.StartDate < session.EndDate && rs.EndDate > session.StartDate)
+                .FirstOrDefaultAsync();
+
+            if (overlappingSession != null)
+            {
+                return BadRequest("Overlapping session exists for this professor.");
+            }
+
             _context.RegistrationSessions.Add(session);
             await _context.SaveChangesAsync();
             return CreatedAtAction("GetRegistrationSessionById", new { id = session.Id }, session);
@@ -71,8 +99,8 @@ namespace Licenta_app.Server.Controllers
             {
                 return Unauthorized("User Id not found in token");
             }
-            
-            var prof = await _context.Professors.FirstOrDefaultAsync(p => p.UserId == int.Parse(userIdClaim));
+
+            var prof = await _context.Professors.Include(p => p.Department).FirstOrDefaultAsync(p => p.UserId == int.Parse(userIdClaim));
             if (prof == null || (prof.UserId != session.ProfessorId && !User.IsInRole("Admin")))
             {
                 return Unauthorized("You are not authorized to modify this session.");
@@ -83,19 +111,18 @@ namespace Licenta_app.Server.Controllers
             {
                 return NotFound("Registration session not found");
             }
-            var depart = await _context.Departments.FirstOrDefaultAsync(d => d.DepartmentId == prof.DepartmentId);
-            if (depart == null)
-            {
-                return NotFound("Department not found");
-            }
 
-            existingSession.StartDate = session.StartDate;
-            existingSession.EndDate = session.EndDate;
+            existingSession.StartDate = session.StartDate.ToUniversalTime();
+            existingSession.EndDate = session.EndDate.ToUniversalTime();
 
-            //if the user is admin or the professor is head of department, allow changing max students
-            if (User.IsInRole("Admin") || depart.HeadOfDepartmentId == prof.UserId)
+            var isHeadOfDepartment = prof.Department?.HeadOfDepartmentId == prof.UserId;
+            if (User.IsInRole("Admin") || isHeadOfDepartment)
             {
                 existingSession.MaxStudents = session.MaxStudents;
+            }
+            else if (session.MaxStudents != existingSession.MaxStudents)
+            {
+                return BadRequest("Only the Head of Department or Admin can modify the maximum number of students.");
             }
 
 
@@ -132,11 +159,32 @@ namespace Licenta_app.Server.Controllers
             }
             _context.RegistrationSessions.Remove(session);
             await _context.SaveChangesAsync();
+            //reset indexes
+            var sessions = await _context.RegistrationSessions
+                .Where(rs => rs.ProfessorId == session.ProfessorId)
+                .ToListAsync();
+            for (int i = 0; i < sessions.Count; i++)
+            {
+                sessions[i].Id = i + 1;
+                _context.Entry(sessions[i]).State = EntityState.Modified;
+            }
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
         //get all registration sessions for a professor
         //see Professor Controller for this
+        // GET: api/registrationsessions/by-professor/5
+        [HttpGet("by-professor/{professorId}")]
+        public async Task<ActionResult<IEnumerable<RegistrationSession>>> GetSessionsByProfessor(int professorId)
+        {
+            var sessions = await _context.RegistrationSessions
+                .Where(rs => rs.ProfessorId == professorId)
+                .Include(rs => rs.Professor)
+                .ToListAsync();
+
+            return Ok(sessions);
+        }
 
         // get all active registration sessions
         // GET: api/registrationsessions/active
@@ -153,8 +201,34 @@ namespace Licenta_app.Server.Controllers
         }
 
 
+        // get all registration sessions with pending requests
+        // GET: api/registrationsessions/pending-requests
+        [HttpGet("pending-requests")]
+        public async Task<ActionResult<IEnumerable<RegistrationSession>>> GetSessionsWithPendingRequests()
+        {
+            var sessions = await _context.RegistrationSessions
+                .Where(rs => _context.RegistrationRequests.Any(r => r.RegistrationSessionId == rs.Id && r.Status == RequestStatus.Pending))
+                .Include(rs => rs.Professor)
+                .ToListAsync();
+
+            return Ok(sessions);
+        }
+
+
+        // get all active registration sessions for a professor
+        // GET: api/registrationsessions/active/by-professor/5
+        [HttpGet("active/by-professor/{professorId}")]
+        public async Task<ActionResult<IEnumerable<RegistrationSession>>> GetActiveSessionsByProfessor(int professorId)
+        {
+            var now = DateTime.UtcNow;
+            var activeSessions = await _context.RegistrationSessions
+                .Where(rs => rs.ProfessorId == professorId && rs.StartDate <= now && rs.EndDate >= now)
+                .Include(rs => rs.Professor)
+                .ToListAsync();
+
+            return Ok(activeSessions);
+        }
 
     }
-
 
 }

@@ -8,17 +8,14 @@ export const authGuard = (to: RouteLocationNormalized, from: RouteLocationNormal
   if (!userStore.user) {
     userStore.initializeFromToken();
 
-    console.log("user initialized\n");
   }
 
   // Check if route requires authentication
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {
 
-    console.log("blbjklbisabkjahb "+userStore.isAuthenticated)
     next({ path: '/login', query: { redirect: to.fullPath } });
     return;
   }
-  console.log("lkkkkkkkkkkkkkkk" + userStore.user + "\n\n");
   // Check role-based access
   if (to.meta.roles && userStore.user?.role) {
     const authorizedRoles = to.meta.roles as Array<string>;

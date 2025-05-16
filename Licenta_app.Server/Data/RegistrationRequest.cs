@@ -17,7 +17,7 @@
         public RegistrationSession? RegistrationSession { get; set; } ///in web client i need to get the professor name with a dropdown list of open registration sessions based on start date and end date
         public RequestStatus Status { get; set; }
         public string ProposedTheme { get; set; }
-        public DateTime RequestDate { get; set; } = DateTime.UtcNow; // to refresh db
+        
         public string StatusJustification { get; set; } 
     }
 }

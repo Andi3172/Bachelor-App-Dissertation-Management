@@ -35,6 +35,7 @@ namespace Licenta_app.Server.Controllers
         public async Task<ActionResult<Professor>> GetProfessor(int id)
         {
             var professor = await _context.Professors
+                .Include(p => p.Department)
                 .FirstOrDefaultAsync(p => p.UserId == id);
 
             if (professor == null)
