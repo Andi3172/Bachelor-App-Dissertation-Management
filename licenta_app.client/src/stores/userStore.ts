@@ -11,6 +11,7 @@ interface UserState {
   username?: string;
   studentNumber?: string;
   department?: string;
+  departmentId?: number;
 }
 
 interface JwtPayload {
@@ -80,11 +81,15 @@ export const useUserStore = defineStore('user', () => {
   }
   async function initializeFromToken() {
     const token = authService.getToken();
+
+    console.log("token = ", token);
     if (!token) return;
 
     const decoded = jwtDecode<JwtPayload>(token);
     const now = Date.now() / 1000;
     if (decoded.exp < now) {
+
+      console.log("logout")
       authService.logout();
       return;
     }
@@ -92,6 +97,8 @@ export const useUserStore = defineStore('user', () => {
     // 1) fetch the core User record
     const userRes = await axios.get(`/api/user/${decoded.sub}`);
     const core = userRes.data as { id: number, username: string, email: string, role: string };
+
+    console.log(" core = ", core);
 
     // 2) if student, also fetch student details
     if (core.role === 'Student') {
@@ -104,6 +111,16 @@ export const useUserStore = defineStore('user', () => {
         studentNumber: studRes.data.studentNumber,
         department: studRes.data.department
       };
+    } else if (core.role === 'Professor') {
+      const profRes = await axios.get(`/api/professor/${core.id}`);
+      user.value = {
+        id: String(core.id),
+        username: core.username,
+        email: core.email,
+        role: core.role,
+        departmentId: profRes.data.departmentId || null
+      };
+    
     } else {
       user.value = {
         id: String(core.id),

@@ -88,7 +88,7 @@ namespace Licenta_app.Server.Controllers
         // PUT: api/professors/{5}
         [Authorize(Roles = "Professor, Admin")]
         [HttpPut("{id}")]
-        public async Task<ActionResult<Professor>> UpdateProfessor([FromQuery] int id, [FromBody] Professor professor)
+        public async Task<IActionResult> UpdateProfessor(int id, Professor professor)
         {
             
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

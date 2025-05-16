@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.IdentityModel.Tokens.Jwt;
+using Google.Apis.Auth;
 
 
 //using Microsoft.IdentityModel.JsonWebTokens;
@@ -117,6 +118,51 @@ namespace Licenta_app.Server.Controllers
             return Ok(new { message = "User registered succsessfully", token });
 
         }
+
+
+        //google login
+        // POST: api/auth/google-login
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        {
+            try
+            {
+                var payload = await GoogleJsonWebSignature.ValidateAsync(request.idToken);
+
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == payload.Email);
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        Email = payload.Email,
+                        Username = payload.Name ?? payload.Email,
+                        Password = "", // No password for Google users
+                        Role = payload.Email.Contains("stud.ase.ro") ? "Student" :
+                               payload.Email.Contains("admin") ? "Admin" : "Professor",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.Users.Add(user);
+
+                    // Add to Student or Professor table as needed
+                    if (user.Role == "Student")
+                        _context.Students.Add(new Student { User = user });
+                    else if (user.Role == "Professor")
+                        _context.Professors.Add(new Professor { User = user });
+
+                    await _context.SaveChangesAsync();
+                }
+
+                // Generate a JWT token
+                var token = GenerateJwtToken(user);
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized("Invalid Google token: " + ex.Message);
+            }
+        }
+
 
 
         private string GenerateJwtToken(User user)

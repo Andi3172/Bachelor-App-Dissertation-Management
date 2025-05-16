@@ -202,33 +202,28 @@ const stats = ref({
 const recentSessions = ref([]);
 const recentRequests = ref([]);
 
-// Fetch dashboard data
+
 const fetchDashboardData = async () => {
   try {
     loading.value = true;
 
-    // Fetch users count
+   
     const usersResponse = await axios.get('/api/user');
     stats.value.usersCount = usersResponse.data.length || 0;
 
-    // Fetch students
     const studentsResponse = await axios.get('/api/student');
     stats.value.studentCount = studentsResponse.data.length || 0;
 
-    // Fetch professors
     const professorsResponse = await axios.get('/api/professor');
     stats.value.professorCount = professorsResponse.data.length || 0;
 
-    // Fetch departments
     const departmentsResponse = await axios.get('/api/department');
     stats.value.departmentCount = departmentsResponse.data.length || 0;
 
-    // Get recent registration sessions
     const sessionsResponse = await axios.get('/api/registrationsession');
-    recentSessions.value = sessionsResponse.data.slice(0, 5); // Just take the first 5
+    recentSessions.value = sessionsResponse.data.slice(0, 5); 
 
-    // For recent requests, you would need an endpoint that returns registration requests
-    // This is a placeholder assuming such endpoint exists
+    //Placeholder for registration requests for now
     try {
       const requestsResponse = await axios.get('/api/registrationrequest');
       recentRequests.value = requestsResponse.data.slice(0, 5);
@@ -248,7 +243,7 @@ const editProfile = () => {
   router.push('/admin/profile');
 };
 
-// Helper functions for session display
+
 const getSessionStatus = (session) => {
   const now = new Date();
   const startDate = new Date(session.startDate);

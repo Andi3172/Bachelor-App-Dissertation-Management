@@ -44,8 +44,8 @@
   </v-container>
 </template>
 
-<script setup lang="ts">// No special logic needed for this view</script>
+<script setup lang="ts"></script>
 
 <style scoped>
-  /* Consistent with other views */
+  
 </style>

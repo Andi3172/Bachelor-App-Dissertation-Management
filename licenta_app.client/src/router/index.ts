@@ -39,7 +39,7 @@ const router = createRouter({
       },
       children: [
         {
-          path: 'dashboard',
+          path: '/student/dashboard',
           name: 'student-dashboard',
           component: () => import('@/views/student/DashboardView.vue')
         },
@@ -48,7 +48,6 @@ const router = createRouter({
           name: 'student-profile',
           component: () => import('@/views/student/ProfileView.vue')
         }
-        // Add more student-specific routes as needed
       ]
     },
     // Professor routes
@@ -65,11 +64,14 @@ const router = createRouter({
           path: 'dashboard',
           name: 'professor-dashboard',
           component: () => import('@/views/professor/DashboardView.vue')
+        },
+        {
+          path: '/professor/profile',
+          name: 'professor-profile',
+          component: () => import('@/views/professor/ProfileView.vue')
         }
-        // Add more professor-specific routes as needed
       ]
     },
-    // Admin routes
     {
       path: '/admin',
       name: 'admin',
@@ -83,11 +85,33 @@ const router = createRouter({
           path: 'dashboard',
           name: 'admin-dashboard',
           component: () => import('@/views/admin/DashboardView.vue')
+        },
+        {
+          path: '/admin/profile',
+          name: 'admin-profile',
+          component: () => import('@/views/admin/ProfileView.vue')
+        },
+        {
+          path: '/admin/users',
+          name: 'admin-users',
+          component: () => import('@/views/admin/AdminUsersView.vue'),
+          meta: {
+            requiresAuth: true,
+            roles: ['Admin']
+          }
+        },
+        {
+          path: '/admin/departments',
+          name: 'admin-departments',
+          component: () => import('@/views/admin/AdminDepartmentsView.vue'),
+          meta: {
+            requiresAuth: true,
+            roles: ['Admin']
+          }
         }
-        // Add more admin-specific routes as needed
+        
       ]
     },
-    // Catch-all route for 404
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -96,7 +120,6 @@ const router = createRouter({
   ]
 });
 
-// Set up authentication guards
 setupAuthGuards(router);
 
 export default router;

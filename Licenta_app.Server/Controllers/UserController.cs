@@ -1,4 +1,5 @@
 ﻿using Licenta_app.Server.Data;
+using Licenta_app.Server.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -49,16 +50,16 @@ namespace Licenta_app.Server.Controllers
         // PUT: api/users
         //[HttpPut("{id}")]
         [HttpPut("{id}")]
-        //from query is used to get the id from the url. Can i get the id from the token?
         
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
+
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userIdClaim == null)
             {
                 return Unauthorized("User ID not found in token");
             }
-            Console.WriteLine("User ID from token: " + userIdClaim);
+
             if (userIdClaim != id.ToString())
             {
                 return Forbid("You can only update your own user");
@@ -70,16 +71,23 @@ namespace Licenta_app.Server.Controllers
                 return NotFound("User not found.");
             }
 
-            existingUser.Username = user.Username;
-            existingUser.Email = user.Email;
-            //change password and hash it
-            if (user.Password != null)
+            // Validate current password using BCrypt
+            bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(dto.Password, existingUser.Password);
+            if (!isPasswordCorrect)
             {
-                existingUser.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+                return Unauthorized("Incorrect current password.");
             }
 
-
+            // Apply updates
+            existingUser.Username = dto.Username;
+            existingUser.Email = dto.Email;
             existingUser.UpdatedAt = DateTime.UtcNow;
+
+            // Update password only if a new one is provided
+            if (!string.IsNullOrWhiteSpace(dto.NewPassword))
+            {
+                existingUser.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            }
 
             _context.Entry(existingUser).State = EntityState.Modified;
 
@@ -87,20 +95,12 @@ namespace Licenta_app.Server.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (DbUpdateException)
             {
-                if (!_context.Users.Any(u => u.Id == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(500, "An error occurred while saving changes.");
             }
 
             return NoContent();
-
         }
 
 

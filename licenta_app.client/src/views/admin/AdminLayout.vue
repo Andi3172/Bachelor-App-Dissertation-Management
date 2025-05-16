@@ -53,7 +53,7 @@ const userStore = useUserStore();
 const activeTab = ref(null);
 
 onMounted(() => {
-  // Set active tab based on current route
+  
   const path = route.path;
   if (path.includes('/dashboard')) {
     activeTab.value = 'dashboard';
@@ -65,7 +65,7 @@ onMounted(() => {
     activeTab.value = 'registrations';
   }
 
-  // Ensure the user data is loaded
+  
   if (!userStore.user) {
     userStore.initializeFromToken();
   }

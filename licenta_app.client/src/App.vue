@@ -80,12 +80,10 @@
   const userStore = useUserStore();
   const drawer = ref(false);
 
-  // Initialize user from token if exists
   onMounted(() => {
     userStore.initializeFromToken();
   });
 
-  // Set role color for chip
   const roleColor = computed(() => {
     switch (userStore.user?.role) {
       case 'Admin':
@@ -101,5 +99,4 @@
 </script>
 
 <style>
-  /* Global styles */
 </style>

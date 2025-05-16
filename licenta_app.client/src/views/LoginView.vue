@@ -43,6 +43,16 @@
                      class="mt-4">
                 {{ isLoading ? 'Logging in...' : 'Login' }}
               </v-btn>
+
+              <v-btn color="red"
+                     variant="elevated"
+                     size="large"
+                     block
+                     class="mt-2 mb-4"
+                     @click="handleGoogleLogin">
+                <v-icon left>mdi-google</v-icon>
+                Login with Google
+              </v-btn>
             </v-form>
           </v-card-text>
 
@@ -62,6 +72,8 @@
   import { ref, computed } from 'vue';
   import { useRouter } from 'vue-router';
   import { useUserStore } from '@/stores/userStore';
+  import axios from '@/api/axios';
+  import apiClient from '@/api/axios';
 
   const router = useRouter();
   const userStore = useUserStore();
@@ -105,9 +117,44 @@
       }
     }
   };
+
+  const handleGoogleLogin = () => {
+    // Initialize Google Identity Services
+    google.accounts.id.initialize({
+      client_id: '212062145532-0f12s91iusq5gir9dniue9sj9kedr7rc.apps.googleusercontent.com',
+      callback: async (response: any) => {
+        console.log('Google login response:', response); // Debugging
+        if (!response.credential) {
+          console.error('No credential received from Google');
+          userStore.setError('Google login failed: No credential received');
+          return;
+        }
+
+        try {
+          const res = await axios.post('/api/auth/google-login', {
+            idToken: response.credential
+          });
+          console.log('Backend response:', res.data); // Debugging
+          if (res.data.token) {
+            console.log("a intrat in if", res.data.token);
+            localStorage.setItem('auth_token', res.data.token);
+            // Add token to axios default headers for future requests
+            apiClient.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+          }
+          console.log("111");
+          userStore.initializeFromToken();
+          console.log("22222");
+          router.push('/student/dashboard'); // Redirect to dashboard
+        } catch (err: any) {
+          console.error('Google login failed:', err.response?.data || err.message); // Debugging
+          userStore.setError('Google login failed');
+        }
+      }
+    });
+    google.accounts.id.prompt();
+  };
+
 </script>
 
 <style scoped>
-  /* Any additional custom styles if needed */
 </style>
-

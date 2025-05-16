@@ -162,5 +162,4 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
-  /* Any additional custom styles if needed */
 </style>
