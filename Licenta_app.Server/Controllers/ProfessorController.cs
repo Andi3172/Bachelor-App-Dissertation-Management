@@ -130,7 +130,7 @@ namespace Licenta_app.Server.Controllers
             }
             return NoContent();
         }
-
+        //thing
         //admin specific endpoint for editing other Professors
         // PUT: api/professors/admin-update/5
         [Authorize(Roles = "Admin")]
