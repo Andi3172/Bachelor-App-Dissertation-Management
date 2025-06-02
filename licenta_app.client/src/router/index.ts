@@ -47,6 +47,16 @@ const router = createRouter({
           path: '/student/profile',
           name: 'student-profile',
           component: () => import('@/views/student/ProfileView.vue')
+        },
+        {
+          path: '/student/registration-requests',
+          name: 'student-registration-requests',
+          component: () => import('@/views/student/StudentRequestView.vue')
+        },
+        {
+          path: '/student/my-requests',
+          name: 'student-my-requests',
+          component: () => import('@/views/student/StudentMyRequestsView.vue')
         }
       ]
     },

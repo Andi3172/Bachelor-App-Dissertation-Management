@@ -67,7 +67,7 @@
               Check active registration sessions to register for your thesis.
             </v-alert>
 
-            <v-btn color="primary" prepend-icon="mdi-clipboard-text" @click="$router.push('/student/registration')">
+            <v-btn color="primary" prepend-icon="mdi-clipboard-text" @click="$router.push('/student/my-requests')">
               View Registration Options
             </v-btn>
           </v-card-text>

@@ -146,6 +146,13 @@ namespace Licenta_app.Server.Controllers
             var requests = await _context.RegistrationRequests
                 .Where(r=> r.StudentId == studentId)
                 .Include(r => r.RegistrationSession).ThenInclude(rs=> rs.Professor)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.ProposedTheme,
+                    Status = r.Status.ToString(),
+                    ProfessorName = r.RegistrationSession.Professor.User.Username
+                })
                 .ToListAsync();
 
             if (!requests.Any())
@@ -153,7 +160,7 @@ namespace Licenta_app.Server.Controllers
                 return NotFound("No requests found for student with ID " + studentId);
             }
 
-            return requests;
+            return Ok(requests);
         }
 
         // get all registration requests by session

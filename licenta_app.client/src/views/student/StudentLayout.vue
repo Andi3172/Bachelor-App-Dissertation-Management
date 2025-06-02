@@ -21,7 +21,7 @@
                 <v-icon start>mdi-account</v-icon>
                 Profile
               </v-tab>
-              <v-tab value="registration" to="/student/registration">
+              <v-tab value="registration" to="/student/registration-requests">
                 <v-icon start>mdi-clipboard-text</v-icon>
                 Thesis Registration
               </v-tab>

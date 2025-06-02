@@ -123,7 +123,14 @@
     if (!userId) return;
 
     const response = await axios.get(`/api/professor/${userId}`);
-    professorData.value = response.data;
+    const professor = response.data;
+
+    professorData.value = {
+      username: userStore.user?.username,
+      email: userStore.user?.email,
+      department: professor.department?.departmentName || 'Not assigned',
+      specialization: professor.specialization || 'Not set'
+    };
   } catch (error) {
     console.error('Error fetching professor data:', error);
   } finally {
