@@ -25,9 +25,9 @@
                 <v-icon start>mdi-calendar-clock</v-icon>
                 Registration Sessions
               </v-tab>
-              <v-tab value="requests" to="/professor/requests">
-                <v-icon start>mdi-clipboard-list</v-icon>
-                Student Requests
+              <v-tab value="requests" to="/professor/approved-students">
+                <v-icon start>mdi-account-group</v-icon>
+                Approved Requests
               </v-tab>
             </v-tabs>
           </v-card>

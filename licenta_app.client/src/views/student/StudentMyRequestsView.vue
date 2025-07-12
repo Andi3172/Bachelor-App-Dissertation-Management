@@ -21,6 +21,12 @@
           <template v-slot:item.professorName="{ item }">
             {{ item.professorName }}
           </template>
+          <template v-slot:item.actions="{ item }">
+            <v-btn icon color="error" @click="deleteRequest(item.id)">
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+          </template>
+
         </v-data-table>
       </v-card-text>
     </v-card>
@@ -39,7 +45,8 @@
     { text: 'ID', value: 'id' },
     { text: 'Proposed Theme', value: 'proposedTheme' },
     { text: 'Status', value: 'status' },
-    { text: 'Professor', value: 'professorName' }
+    { text: 'Professor', value: 'professorName' },
+    { text: 'Actions', value: 'actions', sortable: false }
   ];
 
   const fetchRequests = async () => {
@@ -62,6 +69,22 @@
       default: return 'info';
     }
   };
+
+  const deleteRequest = async (id) => {
+    if (!confirm('Are you sure you want to delete this request?')) return;
+    try {
+      await axios.delete(`/api/registrationrequest/${id}`);
+      fetchRequests();
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        alert('Request not found. It may have already been deleted.');
+      } else {
+        alert('Failed to delete request.');
+      }
+      console.error('Failed to delete request:', error);
+    }
+  };
+
 
   onMounted(() => {
     fetchRequests();

@@ -92,7 +92,7 @@
         studentId: studentId,
         registrationSessionId: form.value.registrationSessionId,
         proposedTheme: form.value.proposedTheme || 'Default Theme',
-        status: 'Pending',
+        //status: 'Pending',
         statusJustification: ''
       };
 

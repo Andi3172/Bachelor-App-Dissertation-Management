@@ -261,20 +261,33 @@ const getSessionStatusColor = (session) => {
   return 'grey';
 };
 
-const getRequestStatusColor = (request) => {
-  if (!request || !request.status) return 'grey';
+  const getRequestStatusColor = (request) => {
+    if (!request || request.status === undefined || request.status === null) return 'grey';
 
-  switch (request.status.toLowerCase()) {
-    case 'approved':
-      return 'success';
-    case 'pending':
-      return 'warning';
-    case 'rejected':
-      return 'error';
-    default:
-      return 'grey';
-  }
-};
+    let statusStr = request.status;
+    if (typeof statusStr === 'number') {
+      switch (statusStr) {
+        case 0: statusStr = 'pending'; break;
+        case 1: statusStr = 'approved'; break;
+        case 2: statusStr = 'rejected'; break;
+        default: statusStr = 'unknown';
+      }
+    } else if (typeof statusStr === 'string') {
+      statusStr = statusStr.toLowerCase();
+    }
+
+    switch (statusStr) {
+      case 'approved':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'rejected':
+        return 'error';
+      default:
+        return 'grey';
+    }
+  };
+
 
 const formatDateRange = (start, end) => {
   if (!start || !end) return 'Invalid date range';
@@ -286,7 +299,7 @@ const formatDateRange = (start, end) => {
 };
 
 onMounted(async () => {
-  if (!userStore.user) {
+  if (userStore.user) {
     await userStore.initializeFromToken();
   }
 

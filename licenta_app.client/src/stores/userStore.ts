@@ -136,6 +136,7 @@ export const useUserStore = defineStore('user', () => {
 
   return {
     user,
+    initializeFromToken,
     isLoading,
     error,
     isAuthenticated,
@@ -144,7 +145,7 @@ export const useUserStore = defineStore('user', () => {
     isProfessor,
     login,
     register,
-    logout,
-    initializeFromToken
+    logout
+    
   };
 });

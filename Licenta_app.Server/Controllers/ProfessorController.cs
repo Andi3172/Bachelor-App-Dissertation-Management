@@ -15,7 +15,7 @@ namespace Licenta_app.Server.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public ProfessorController(ApplicationDbContext context)
+        public ProfessorController(ApplicationDbContext context)                                      
         {
             _context = context;
         }

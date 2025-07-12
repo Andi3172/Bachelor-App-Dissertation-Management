@@ -25,6 +25,7 @@ namespace Licenta_app.Server.Controllers
         {
             return await _context.RegistrationRequests
                 .Include(r => r.Student)
+                    .ThenInclude(s => s.User)
                 .Include(r => r.RegistrationSession)
                 .ToListAsync();
         }
@@ -36,7 +37,10 @@ namespace Licenta_app.Server.Controllers
         {
             var registrationRequest = await _context.RegistrationRequests
                 .Include(r => r.Student)
-                .Include(r => r.RegistrationSession).ThenInclude(rs => rs.Professor)
+                    .ThenInclude(s => s.User)
+                .Include(r => r.RegistrationSession)
+                    .ThenInclude(rs => rs.Professor)
+                        .ThenInclude(p => p.User)
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (registrationRequest == null)
             {
@@ -72,18 +76,34 @@ namespace Licenta_app.Server.Controllers
         public async Task<IActionResult> UpdateRequest(int id, [FromBody] RegistrationRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            
             if (userIdClaim == null)
             {
                 return Unauthorized("User ID not found in token");
             }
 
-            var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == int.Parse(userIdClaim));
-            var professor = await _context.Professors.FirstOrDefaultAsync(p => p.UserId == int.Parse(userIdClaim));
+            var userId = int.Parse(userIdClaim);
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == userId);
+            var professor = await _context.Professors.FirstOrDefaultAsync(p => p.UserId == userId);
 
-            if (student == null || professor == null || (student.UserId != request.StudentId && !User.IsInRole("Admin")) || (professor.UserId != request.RegistrationSession.Professor.UserId && !User.IsInRole("Admin")))
+            if (student == null && professor == null && !User.IsInRole("Admin"))
             {
                 return Unauthorized("User is not a student or professor");
+            }
+
+            // Only allow students to update their own requests, professors to update requests for their sessions, or admins
+            if (student != null && student.UserId != request.StudentId && !User.IsInRole("Admin"))
+            {
+                return Unauthorized("Student can only update their own requests");
+            }
+            if (professor != null)
+            {
+                // Load the session to check professor ownership
+                var session = await _context.RegistrationSessions
+                    .FirstOrDefaultAsync(rs => rs.Id == request.RegistrationSessionId);
+                if (session == null || (session.ProfessorId != professor.UserId && !User.IsInRole("Admin")))
+                {
+                    return Unauthorized("Professor can only update requests for their own sessions");
+                }
             }
 
             var existingRequest = await _context.RegistrationRequests.FindAsync(id);
@@ -92,17 +112,13 @@ namespace Licenta_app.Server.Controllers
                 return NotFound();
             }
 
+            //track approval
+            var wasPrevioslyApproved = existingRequest.Status == RequestStatus.Approved;
+
             existingRequest.Status = request.Status;
             existingRequest.ProposedTheme = request.ProposedTheme;
-            if (User.IsInRole("Admin"))
-            {
-                existingRequest.StatusJustification = request.StatusJustification;
-            }
-            
+            existingRequest.StatusJustification = request.StatusJustification;
             existingRequest.RegistrationSessionId = request.RegistrationSessionId;
-
-
-
 
             _context.Entry(existingRequest).State = EntityState.Modified;
             try
@@ -120,6 +136,58 @@ namespace Licenta_app.Server.Controllers
                     throw;
                 }
             }
+
+            // === Academic Default File utomation ===
+            // Only adds the academic default file i the request is now approved and wasn't before
+            if(!wasPrevioslyApproved && existingRequest.Status == RequestStatus.Approved)
+            {
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "templates", "academic-default.docx");
+                if (System.IO.File.Exists(templatePath))
+                {
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    var uniqueFileName = $"{Guid.NewGuid()}_academic-default.docx";
+                    var destPath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    // copy the template to the uploads folder
+                    System.IO.File.Copy(templatePath, destPath, overwrite: true);
+
+                    // remove any existing academic-default file for this request
+                    var oldFile = await _context.Files
+                        .FirstOrDefaultAsync(f => f.RequestId == existingRequest.Id && f.FileType == "academic-default");
+                    if (oldFile != null)
+                    {
+                        if (System.IO.File.Exists(oldFile.FilePath))
+                            System.IO.File.Delete(oldFile.FilePath);
+                        _context.Files.Remove(oldFile);
+                        await _context.SaveChangesAsync();
+                    }
+
+                    //add new FileUpload entry
+                    var academicDefaultFile = new FileUpload
+                    {
+                        RequestId = existingRequest.Id,
+                        UploadedBy = "system",
+                        FileName = "academic-default.docx",
+                        FilePath = destPath,
+                        FileType = "academic-default",
+                        UploadedDate = DateTime.UtcNow,
+                        RegistrationRequest = existingRequest
+                    };
+                    _context.Files.Add(academicDefaultFile);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    //log or handle missing template file
+                    Console.WriteLine("Academic default template file not found at: " + templatePath);
+                }
+
+            }
+            // === End of Academic Default File Automation ===
+
             return NoContent();
         }
 
@@ -146,19 +214,9 @@ namespace Licenta_app.Server.Controllers
             var requests = await _context.RegistrationRequests
                 .Where(r=> r.StudentId == studentId)
                 .Include(r => r.RegistrationSession).ThenInclude(rs=> rs.Professor)
-                .Select(r => new
-                {
-                    r.Id,
-                    r.ProposedTheme,
-                    Status = r.Status.ToString(),
-                    ProfessorName = r.RegistrationSession.Professor.User.Username
-                })
                 .ToListAsync();
 
-            if (!requests.Any())
-            {
-                return NotFound("No requests found for student with ID " + studentId);
-            }
+           
 
             return Ok(requests);
         }
@@ -171,13 +229,27 @@ namespace Licenta_app.Server.Controllers
             var requests = await _context.RegistrationRequests
                 .Where(r => r.RegistrationSessionId == sessionId)
                 .Include(r => r.Student)
+                    .ThenInclude(s => s.User)
                 .ToListAsync();
-            if (!requests.Any())
-            {
-                return NotFound("No requests found for session with ID " + sessionId);
-            }
-            return requests;
+            
+            return Ok(requests);
         }
+
+
+        // get all approved registration requests for a professor
+        [Authorize(Roles = "Professor, Admin")]
+        [HttpGet("approved-by-professor/{professorId}")]
+        public async Task<ActionResult<IEnumerable<RegistrationRequest>>> GetApprovedRequestsByProfessor(int professorId)
+        {
+            var requests = await _context.RegistrationRequests
+                .Include(r => r.Student).ThenInclude(s => s.User)
+                .Include(r => r.RegistrationSession)
+                .Where(r => r.RegistrationSession.ProfessorId == professorId && r.Status == RequestStatus.Approved)
+                .ToListAsync();
+
+            return Ok(requests);
+        }
+
 
         // update request status
         // PATCH: api/registrationrequests/5/status

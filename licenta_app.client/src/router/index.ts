@@ -57,6 +57,11 @@ const router = createRouter({
           path: '/student/my-requests',
           name: 'student-my-requests',
           component: () => import('@/views/student/StudentMyRequestsView.vue')
+        },
+        {
+          path: 'supervision',
+          name: 'thesis-supervision',
+          component: () => import('@/views/student/StudentFileView.vue')
         }
       ]
     },
@@ -84,6 +89,21 @@ const router = createRouter({
           path: 'sessions',
           name: 'professor-sessions',
           component: () => import('@/views/professor/ProfessorSessionsView.vue')
+        },
+        {
+          path: 'professor-requests',
+          name: 'professor-requests',
+          component: () => import('@/views/professor/ProfessorRequestsView.vue')
+        },
+        {
+          path: 'approved-students',
+          name: 'professor-approved-students',
+          component: () => import('@/views/professor/ProfessorApprovedStudentsView.vue')
+        },
+        {
+          path: 'approved-students/:id',
+          name: 'professor-approved-student-details',
+          component: () => import('@/views/professor/ProfessorApprovedStudentDetailsView.vue'),
         }
       ]
     },

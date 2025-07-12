@@ -1,4 +1,5 @@
 ﻿using Licenta_app.Server.Data;
+using Licenta_app.Server.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -49,20 +50,50 @@ namespace Licenta_app.Server.Controllers
         // POST: api/fileupload
 
         [HttpPost("upload")]
-        public async Task<IActionResult> UploadFile(IFormFile file, int requestId, string uploadedBy)
+        public async Task<IActionResult> UploadFile([FromForm] FileUploadDto dto)
         {
-            var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var file = dto.File;
+            var requestId = dto.RequestId;
+            var uploadedBy = dto.UploadedBy;
+            var fileType = dto.FileType;
 
             if (file == null || file.Length == 0)
             {
                 return BadRequest("File is empty or none was uploaded");
             }
 
-            var request = await _context.RegistrationRequests.FindAsync(requestId);
+            var allowedTypes = new[] { "academic-default", "academic-signed", "progress" };
+            if (!allowedTypes.Contains(fileType))
+            {
+                return BadRequest("Invalid file type. Allowed types are: " + string.Join(", ", allowedTypes));
+            }
+
+            var request = await _context.RegistrationRequests
+                .Include(r => r.Student).ThenInclude(s => s.User)
+                .Include(r => r.RegistrationSession).ThenInclude(rs => rs.Professor).ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(r => r.Id == requestId);
             if (request == null)
             {
                 return BadRequest("Invalid request ID");
             }
+
+            //overwrite logic - remove old files of this type for this request
+            var oldFile = await _context.Files
+                .FirstOrDefaultAsync(f => f.RequestId == requestId && f.FileType == fileType);
+            if (oldFile != null)
+            {
+                if(System.IO.File.Exists(oldFile.FilePath))
+                    System.IO.File.Delete(oldFile.FilePath);
+
+                _context.Files.Remove(oldFile);
+                await _context.SaveChangesAsync();
+            }
+
+            var studentUsername = request.Student?.User?.Username ?? "unknownStudent";
+            var profName = request.RegistrationSession?.Professor?.User?.Username ?? "unknownProf";
+            var extension = Path.GetExtension(file.FileName);
+            var systemFileName = $"{studentUsername}_{profName}_{fileType}{extension}";
+            var uniqueFileName = $"{Guid.NewGuid()}_{systemFileName}";
 
             var uploadFolder = Path.Combine(_environment.WebRootPath, "uploads");
             if (!Directory.Exists(uploadFolder))
@@ -72,23 +103,23 @@ namespace Licenta_app.Server.Controllers
 
             var filePath = Path.Combine(uploadFolder, uniqueFileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
             if (file.Length > 50 * 1024 * 1024)
             {
                 return BadRequest("File size exceeds 50MB");
+            }
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
             }
 
             var newFile = new FileUpload
             {
                 RequestId = requestId,
                 UploadedBy = uploadedBy,
-                FileName = file.FileName,
+                FileName = systemFileName,
                 FilePath = filePath,
-                FileType = file.ContentType,
+                FileType = fileType,
                 UploadedDate = DateTime.UtcNow,
                 RegistrationRequest = request
             };
@@ -123,7 +154,14 @@ namespace Licenta_app.Server.Controllers
                 return BadRequest("Access denied");
             }
 
-            var contentType = !string.IsNullOrEmpty(file.FileType) ? file.FileType : "application/octet-stream";
+            var extension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+            string contentType = extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".doc" => "application/msword",
+                _ => "application/octet-stream"
+            };
 
             var memory = new MemoryStream();
             using (var stream = new FileStream(file.FilePath, FileMode.Open))
@@ -157,7 +195,99 @@ namespace Licenta_app.Server.Controllers
             return Ok( new {message = "File deleted successfully", fileId = file.Id});
         }
 
-        
 
+
+        // Get: api/fileupload/by-professor/{professorId}
+        [HttpGet("by-professor/{professorId}")]
+        public async Task<ActionResult<IEnumerable<ProfessorRequestFilesDto>>> GetFilesByProfessor(int professorId)
+        {
+            var requests = await _context.RegistrationRequests
+                .Include(r => r.Student).ThenInclude(s => s.User)
+                .Include(r => r.RegistrationSession)
+                .Where(r => r.RegistrationSession.ProfessorId == professorId)
+                .ToListAsync();
+
+            var result = new List<ProfessorRequestFilesDto>();
+
+            foreach (var req in requests)
+            {
+                var files = await _context.Files
+                    .Where(f => f.RequestId == req.Id)
+                    .ToListAsync();
+
+                var filesByType = files
+                    .GroupBy(f => f.FileType)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.OrderByDescending(f => f.UploadedDate).Select(f => new FileMetadataDto
+                        {
+                            Id = f.Id,
+                            FileName = f.FileName,
+                            UploadedBy = f.UploadedBy,
+                            UploadedDate = f.UploadedDate,
+                            FileType = f.FileType
+                        }).FirstOrDefault()
+                    );
+
+                result.Add(new ProfessorRequestFilesDto
+                {
+                    RequestId = req.Id,
+                    Student = new StudentInfoDto
+                    {
+                        Id = req.Student?.UserId,
+                        Username = req.Student?.User?.Username,
+                        StudentNumber = req.Student?.StudentNumber
+                    },
+                    Files = filesByType
+                });
+            }
+
+            return Ok(result);
+        }
+
+
+        // Get: api/fileupload/by-request/{requestId}
+        [HttpGet("by-request/{requestId}")]
+        public async Task<ActionResult<RequestFilesDto>> GetFilesByRequest(int requestId)
+        {
+            var request = await _context.RegistrationRequests.FindAsync(requestId);
+            if (request == null)
+                return NotFound();
+
+            var files = await _context.Files
+                .Where(f => f.RequestId == requestId)
+                .ToListAsync();
+
+            //group files by FileType, get latest per type
+            var filesByType = files
+                .GroupBy(f => f.FileType)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.OrderByDescending(f => f.UploadedDate).Select(f => new FileMetadataDto
+                    {
+                        Id = f.Id,
+                        FileName = f.FileName,
+                        UploadedBy = f.UploadedBy,
+                        UploadedDate = f.UploadedDate,
+                        FileType = f.FileType
+                    }).FirstOrDefault()
+                );
+
+            //ensure all expected types are present in the dict
+            var expectedTypes = new[] { "academic-default", "academic-signed", "progress" };
+            foreach (var type in expectedTypes)
+            {
+                if (!filesByType.ContainsKey(type))
+                    filesByType[type] = null;
+            }
+
+            var result = new RequestFilesDto
+            {
+                RequestId = requestId,
+                Files = filesByType
+            };
+
+            return Ok(result);
+        }
     }
 }

@@ -25,6 +25,10 @@
                 <v-icon start>mdi-clipboard-text</v-icon>
                 Thesis Registration
               </v-tab>
+              <v-tab value="supervision" to="/student/supervision">
+                <v-icon start>mdi-account-supervisor</v-icon>
+                Thesis Supervision
+              </v-tab>
             </v-tabs>
           </v-card>
         </v-col>
@@ -40,28 +44,34 @@
   </div>
 </template>
 
-<script setup lang="ts">import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { useUserStore } from '@/stores/userStore';
+<script setup lang="ts">
+  import { ref, onMounted } from 'vue';
+  import { useRoute } from 'vue-router';
+  import { useUserStore } from '@/stores/userStore';
 
-const route = useRoute();
-const userStore = useUserStore();
-const activeTab = ref(null);
+  const route = useRoute();
+  const userStore = useUserStore();
+  const activeTab = ref(null);
 
-onMounted(() => {
-  const path = route.path;
-  if (path.includes('/dashboard')) {
-    activeTab.value = 'dashboard';
-  } else if (path.includes('/profile')) {
-    activeTab.value = 'profile';
-  } else if (path.includes('/registration')) {
-    activeTab.value = 'registration';
-  }
+  onMounted(() => {
+    const path = route.path;
+    if (path.includes('/dashboard')) {
+      activeTab.value = 'dashboard';
+    } else if (path.includes('/profile')) {
+      activeTab.value = 'profile';
+    } else if (path.includes('/registration')) {
+      activeTab.value = 'registration';
+    } else if (path.includes('/supervision')) {
+      activeTab.value = 'supervision';
+    } else {
+      activeTab.value = 'dashboard'; // Default tab
+    }
 
-  if (!userStore.user) {
-    userStore.initializeFromToken();
-  }
-});</script>
+    if (!userStore.user) {
+      userStore.initializeFromToken();
+    }
+  });
+</script>
 
 <style scoped>
   .student-layout {
