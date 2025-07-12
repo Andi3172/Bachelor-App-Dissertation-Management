@@ -25,7 +25,7 @@
                 <v-icon start>mdi-domain</v-icon>
                 Departments
               </v-tab>
-              <v-tab value="registrations" to="/admin/registrations">
+              <v-tab value="registrations" to="/admin/thesis-activity">
                 <v-icon start>mdi-clipboard-text</v-icon>
                 Registrations
               </v-tab>

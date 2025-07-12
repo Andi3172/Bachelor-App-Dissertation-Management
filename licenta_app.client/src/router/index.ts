@@ -143,6 +143,15 @@ const router = createRouter({
             requiresAuth: true,
             roles: ['Admin']
           }
+        },
+        {
+          path: 'thesis-activity',
+          name: 'admin-thesis-activity',
+          component: () => import('@/views/admin/AdminThesisActivityView.vue'),
+          meta: {
+            requiresAuth: true,
+            roles: ['Admin']
+          }
         }
         
       ]

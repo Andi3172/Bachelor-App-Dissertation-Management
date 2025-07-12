@@ -60,20 +60,11 @@
                 </v-btn>
               </v-col>
               <v-col cols="6">
-                <v-btn color="info" block prepend-icon="mdi-domain-plus" @click="$router.push('/admin/departments')">
+                <v-btn color="cyan" block prepend-icon="mdi-domain-plus" @click="$router.push('/admin/departments')">
                   Manage Departments
                 </v-btn>
               </v-col>
-              <v-col cols="6">
-                <v-btn color="success" block prepend-icon="mdi-school" @click="$router.push('/admin/users?role=student')">
-                  Manage Students
-                </v-btn>
-              </v-col>
-              <v-col cols="6">
-                <v-btn color="error" block prepend-icon="mdi-teach" @click="$router.push('/admin/users?role=professor')">
-                  Manage Professors
-                </v-btn>
-              </v-col>
+              
             </v-row>
           </v-card-text>
         </v-card>
@@ -175,7 +166,7 @@
               </v-alert>
             </template>
 
-            <v-btn color="primary" block class="mt-4" to="/admin/registrations">
+            <v-btn color="primary" block class="mt-4" to="/admin/thesis-activity">
               View All Registration Activity
             </v-btn>
           </v-card-text>
