@@ -31,7 +31,7 @@ This application was developed as part of my bachelor’s thesis to demonstrate 
 
 1. **Clone the repository**  
    ```bash
-   git clone https://github.com/yourusername/dissertation-management.git
+   git clone https://github.com/Andi3172/dissertation-management.git
    cd dissertation-management
    ```
 
